@@ -107,6 +107,66 @@ class TestLogin:
         assert response.status_code == 401
 
 
+class TestRefreshToken:
+    """POST /api/v1/auth/refresh 테스트."""
+
+    def _register_and_login(self, client: TestClient) -> dict:
+        client.post(
+            "/api/v1/auth/register",
+            json={"email": "refresh@example.com", "username": "refreshuser", "password": "password123"},
+        )
+        login_response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "refresh@example.com", "password": "password123"},
+        )
+        return login_response.json()
+
+    def test_refresh_returns_new_access_token(self, client: TestClient):
+        """유효한 Refresh Token으로 새 Access Token을 받아야 한다."""
+        tokens = self._register_and_login(client)
+        response = client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": tokens["refresh_token"]},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert data["token_type"] == "bearer"
+        # 새로 발급된 Access Token은 기존과 달라야 한다 (exp 등 차이)
+
+    def test_refresh_with_access_token_fails(self, client: TestClient):
+        """Access Token을 Refresh Token 자리에 사용하면 401 에러가 반환되어야 한다."""
+        tokens = self._register_and_login(client)
+        response = client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": tokens["access_token"]},
+        )
+        assert response.status_code == 401
+
+    def test_refresh_with_invalid_token_fails(self, client: TestClient):
+        """유효하지 않은 토큰으로 갱신 시 401 에러가 반환되어야 한다."""
+        response = client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": "invalid.token.value"},
+        )
+        assert response.status_code == 401
+
+    def test_new_access_token_is_usable(self, client: TestClient):
+        """갱신된 Access Token으로 보호된 엔드포인트에 접근할 수 있어야 한다."""
+        tokens = self._register_and_login(client)
+        refresh_response = client.post(
+            "/api/v1/auth/refresh",
+            json={"refresh_token": tokens["refresh_token"]},
+        )
+        new_access_token = refresh_response.json()["access_token"]
+        me_response = client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {new_access_token}"},
+        )
+        assert me_response.status_code == 200
+        assert me_response.json()["email"] == "refresh@example.com"
+
+
 class TestProtectedEndpoint:
     """인증이 필요한 엔드포인트 테스트."""
 

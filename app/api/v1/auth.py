@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -60,7 +62,7 @@ def refresh_token(request: RefreshRequest, db: Session = Depends(get_db)) -> Tok
     except JWTError:
         raise CredentialsException()
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == uuid.UUID(user_id)).first()
     if not user or not user.is_active:
         raise CredentialsException()
 

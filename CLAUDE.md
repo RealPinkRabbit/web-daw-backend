@@ -236,7 +236,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 **아래 체크리스트를 진행하면서 직접 업데이트하세요:**
 
 - [x] Phase 0: 환경 설정 (프로젝트 구조, Docker, /health 엔드포인트) → [docs/phase-0.md](docs/phase-0.md)
-- [ ] Phase 1: DB 기반 구축 (SQLAlchemy 모델, Alembic 마이그레이션)
+- [x] Phase 1: DB 기반 구축 (SQLAlchemy 모델, Alembic 마이그레이션) → [docs/phase-1.md](docs/phase-1.md)
 - [ ] Phase 2: 사용자 인증 (JWT, register, login, get_current_user)
 - [ ] Phase 3: S3 오디오 업로드 (boto3, Pre-signed URL)
 - [ ] Phase 4: 악기 API (CRUD, 샘플 매핑, 공유)

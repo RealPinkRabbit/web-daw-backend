@@ -1,7 +1,24 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, JSON, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.types import TypeDecorator
+
+
+class PortableJSON(TypeDecorator):
+    """
+    PostgreSQL에서는 JSONB, 그 외 DB(SQLite 등)에서는 JSON으로 동작하는 타입.
+    테스트 환경(SQLite)과 프로덕션 환경(PostgreSQL) 모두에서 사용 가능하다.
+    """
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(JSONB())
+        return dialect.type_descriptor(JSON())
 
 
 class Base(DeclarativeBase):

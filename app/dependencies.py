@@ -1,3 +1,4 @@
+import uuid
 from typing import Generator
 
 from fastapi import Depends
@@ -66,7 +67,7 @@ def get_current_user(
     except JWTError:
         raise CredentialsException()
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == uuid.UUID(user_id)).first()
 
     if user is None:
         # 존재하지 않는 사용자임을 노출하지 않기 위해 동일한 예외를 사용한다

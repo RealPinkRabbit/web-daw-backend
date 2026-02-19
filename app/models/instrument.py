@@ -1,10 +1,10 @@
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, PortableJSON, TimestampMixin
 
 
 class Instrument(Base, TimestampMixin):
@@ -41,7 +41,7 @@ class Instrument(Base, TimestampMixin):
     # 악기 설정을 유연하게 저장하는 JSON 컬럼
     # 예: {"bpm": 120, "reverb": 0.3, "pads": [{"key": "C4", "sample_id": "..."}]}
     # JSONB는 PostgreSQL에서 인덱싱 가능한 JSON 타입
-    config_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    config_json: Mapped[dict | None] = mapped_column(PortableJSON, nullable=True)
 
     # 관계
     owner: Mapped["User"] = relationship("User", back_populates="instruments")

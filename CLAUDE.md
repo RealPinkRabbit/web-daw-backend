@@ -235,7 +235,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 
 **아래 체크리스트를 진행하면서 직접 업데이트하세요:**
 
-- [x] Phase 0: 환경 설정 (프로젝트 구조, Docker, /health 엔드포인트)
+- [x] Phase 0: 환경 설정 (프로젝트 구조, Docker, /health 엔드포인트) → [docs/phase-0.md](docs/phase-0.md)
 - [ ] Phase 1: DB 기반 구축 (SQLAlchemy 모델, Alembic 마이그레이션)
 - [ ] Phase 2: 사용자 인증 (JWT, register, login, get_current_user)
 - [ ] Phase 3: S3 오디오 업로드 (boto3, Pre-signed URL)
@@ -243,6 +243,16 @@ pytest tests/ --cov=app --cov-report=term-missing
 - [ ] Phase 5: Docker + AWS 배포 (EC2, RDS, 보안 그룹)
 - [ ] Phase 6: GitHub Actions CI/CD
 - [ ] Phase 7: 마무리 (페이지네이션, 검증, 로깅, README)
+
+## 문서화 규칙
+
+**각 Phase 완료 시 `docs/phase-N.md`를 작성한다.**
+파일에 반드시 포함할 내용:
+1. AI 없이 혼자 구축하는 단계별 절차 (명령어 포함)
+2. 발생했던 트러블슈팅 (증상 → 원인 → 해결 → 교훈)
+3. 백엔드 입문자가 코드 리뷰 시 확인할 포인트
+4. Phase 완료 체크리스트
+5. 다음 Phase 예고
 
 ---
 

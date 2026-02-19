@@ -1,0 +1,72 @@
+name: CI - 테스트 자동화
+
+# PR이 생성되거나 main 브랜치에 푸시할 때 실행
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: pytest 실행
+    runs-on: ubuntu-latest
+
+    # 테스트에 사용할 PostgreSQL 서비스 컨테이너
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: webdaw_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 의존성 캐시
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 의존성 설치
+        run: pip install -r requirements-dev.txt
+
+      - name: pytest 실행 (커버리지 포함)
+        env:
+          # 테스트 환경변수 (실제 AWS 자격증명 불필요 - S3는 mock 처리)
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/webdaw_test
+          TEST_DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/webdaw_test
+          SECRET_KEY: test-secret-key-for-ci-not-for-production
+          ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+          REFRESH_TOKEN_EXPIRE_DAYS: "7"
+          AWS_ACCESS_KEY_ID: fake-key-for-testing
+          AWS_SECRET_ACCESS_KEY: fake-secret-for-testing
+          AWS_REGION: ap-northeast-2
+          S3_BUCKET_NAME: fake-test-bucket
+          ENVIRONMENT: development
+        run: |
+          pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=xml
+
+      - name: 커버리지 결과 업로드 (선택사항)
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

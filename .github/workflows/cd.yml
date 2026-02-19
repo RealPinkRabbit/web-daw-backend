@@ -1,0 +1,54 @@
+name: CD - EC2 자동 배포
+
+# CI가 통과된 후 main 브랜치에 머지될 때만 실행
+on:
+  push:
+    branches: [main]
+
+# CI 워크플로우가 성공해야 배포가 실행됨
+# ci.yml에서 테스트가 통과해야 배포된다
+
+jobs:
+  deploy:
+    name: EC2 배포
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: SSH로 EC2 접속 후 배포
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 최신 코드 Pull
+            cd /app/web-daw-backend
+            git pull origin main
+
+            # Docker 이미지 빌드
+            docker build -f docker/Dockerfile -t web-daw-backend:latest .
+
+            # 기존 컨테이너 중지 및 새 컨테이너 시작
+            docker stop webdaw-app || true
+            docker rm webdaw-app || true
+            docker run -d \
+              --name webdaw-app \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              --env-file /app/.env \
+              web-daw-backend:latest
+
+            # DB 마이그레이션 실행
+            docker exec webdaw-app alembic upgrade head
+
+            # 헬스체크
+            sleep 5
+            curl -f http://localhost:8000/health || exit 1
+            echo "배포 완료!"
+
+# GitHub Secrets에 설정해야 할 값들:
+# EC2_HOST: EC2 퍼블릭 IP 또는 도메인
+# EC2_SSH_KEY: EC2 접속용 PEM 키 (전체 내용)

@@ -1,0 +1,46 @@
+services:
+  # ============================================================
+  # PostgreSQL 데이터베이스
+  # ============================================================
+  db:
+    image: postgres:15-alpine
+    container_name: webdaw-db
+    environment:
+      POSTGRES_USER: webdaw_user
+      POSTGRES_PASSWORD: webdaw_password
+      POSTGRES_DB: webdaw
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webdaw_user -d webdaw"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # FastAPI 앱 서버 (개발 모드)
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: webdaw-app
+    ports:
+      - "8000:8000"
+    volumes:
+      # 코드 변경이 컨테이너에 바로 반영됨 (hot-reload)
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      # docker-compose 내부 네트워크에서는 'db' 호스트명으로 접근
+      DATABASE_URL: postgresql://webdaw_user:webdaw_password@db:5432/webdaw
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:

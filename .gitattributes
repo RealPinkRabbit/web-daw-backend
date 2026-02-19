@@ -1,0 +1,7 @@
+# 텍스트 파일은 LF로 통일 (Linux 서버 배포 기준)
+* text=auto eol=lf
+
+# 바이너리 파일은 변환하지 않음
+*.png binary
+*.jpg binary
+*.ico binary

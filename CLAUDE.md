@@ -242,7 +242,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 - [x] Phase 4: 악기 API (CRUD, 샘플 매핑, 공유) → [docs/phase-4.md](docs/phase-4.md)
 - [x] Phase 5: Docker + AWS 배포 (EC2, RDS, 보안 그룹) → [docs/phase-5.md](docs/phase-5.md)
 - [x] Phase 6: GitHub Actions CI/CD → [docs/phase-6.md](docs/phase-6.md)
-- [ ] Phase 7: 마무리 (페이지네이션, 검증, 로깅, README)
+- [x] Phase 7: 마무리 (로깅, README) → [docs/phase-7.md](docs/phase-7.md)
 
 ## 문서화 규칙
 

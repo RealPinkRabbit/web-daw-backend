@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -24,9 +24,7 @@ class Settings(BaseSettings):
     # 앱 설정
     ENVIRONMENT: str = "development"
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
 
 # 앱 전체에서 이 인스턴스를 import해서 사용한다

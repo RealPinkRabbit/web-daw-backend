@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# 가상환경
+venv/
+.venv/
+env/
+
+# 환경변수 (시크릿 - 절대 이미지에 포함시키지 않음)
+.env
+.env.*
+!.env.example
+
+# 테스트 / 개발
+tests/
+test.db
+*.db
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 문서
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+.github/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 로그
+*.log
+logs/
+
+# 스크립트 (선택적)
+scripts/

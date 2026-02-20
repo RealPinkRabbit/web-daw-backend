@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Python 의존성 설치
-COPY requirements-dev.txt .
+# Python 의존성 설치 (requirements-dev.txt가 requirements.txt를 -r 참조함)
+COPY requirements.txt requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # 소스 코드는 볼륨으로 마운트되므로 COPY 불필요

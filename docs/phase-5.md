@@ -170,21 +170,34 @@ docker ps
 
 #### B-3. Docker Compose 설치
 
+Amazon Linux 2023의 기본 패키지에는 `docker-compose-plugin`이 없다.
+GitHub에서 바이너리를 직접 받아 CLI 플러그인으로 설치한다.
+
 ```bash
-# Docker Compose 플러그인 설치 (Docker v2 방식)
-sudo dnf install -y docker-compose-plugin
+# Docker CLI 플러그인 디렉토리 생성
+mkdir -p ~/.docker/cli-plugins
+
+# Docker Compose 최신 버전 다운로드 (수십 MB)
+curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+  -o ~/.docker/cli-plugins/docker-compose
+
+# 실행 권한 부여
+chmod +x ~/.docker/cli-plugins/docker-compose
 
 # 확인
 docker compose version
 ```
+
+**주의**: curl 다운로드 후 파일 크기가 수십 MB인지 확인한다.
+9 bytes 등 비정상적으로 작다면 URL 오타(예: `lastest` → `latest`)를 확인한다.
 
 ---
 
 #### B-4. 저장소 클론
 
 ```bash
-# Git 설치 (보통 기본 설치됨)
-git --version
+# Git 설치 (Amazon Linux 2023 기본 미설치)
+sudo dnf install -y git
 
 # 저장소 클론
 git clone https://github.com/RealPinkRabbit/web-daw-backend.git
@@ -280,7 +293,50 @@ bash scripts/deploy.sh
 
 ## 2. 트러블슈팅
 
-### 문제 1: RDS 연결 실패 (`could not connect to server`)
+### 문제 1: `docker-compose-plugin` 패키지 없음
+
+**증상**: `sudo dnf install -y docker-compose-plugin` 실행 시 `No match for argument` 에러
+**원인**: Amazon Linux 2023의 기본 dnf 저장소에 `docker-compose-plugin` 패키지가 없음
+**해결**: GitHub에서 바이너리 직접 설치 (B-3 단계 참고)
+**교훈**: Amazon Linux 2023에서 Docker Compose는 패키지 매니저가 아닌 CLI 플러그인 방식으로 설치한다
+
+---
+
+### 문제 2: curl 다운로드 결과가 9 bytes
+
+**증상**: curl 실행 후 `docker compose version` 여전히 실패
+**원인**: URL에 오타 (`lastest` → `latest`) → GitHub가 404 에러 페이지(9 bytes)를 반환
+**해결**: URL을 정확히 확인 후 재실행
+**교훈**: curl 다운로드 후 반드시 파일 크기를 확인한다 (`ls -lh ~/.docker/cli-plugins/docker-compose`)
+
+---
+
+### 문제 3: `git: command not found`
+
+**증상**: `git clone` 실행 시 `git: command not found`
+**원인**: Amazon Linux 2023에 Git이 기본 설치되어 있지 않음
+**해결**: `sudo dnf install -y git` 설치 후 클론
+**교훈**: Amazon Linux 2023은 최소한의 패키지만 기본 설치됨. git, curl 등도 명시적으로 설치해야 할 수 있다
+
+---
+
+### 문제 4: `compose build requires buildx 0.17.0 or later`
+
+**증상**: `bash scripts/deploy.sh` 실행 시 이미지 빌드 단계에서 실패
+**원인**: Amazon Linux 2023의 Docker(25.x)에 포함된 buildx 버전이 낮아 `docker compose build` 불가
+**해결**: `docker compose build` 대신 `docker build` 직접 호출로 변경
+```bash
+# 변경 전
+docker compose -f docker-compose.prod.yml build --no-cache
+
+# 변경 후
+docker build -f docker/Dockerfile -t web-daw-backend:latest .
+```
+**교훈**: `docker compose build`는 내부적으로 buildx를 사용한다. 환경에 따라 `docker build`로 대체하는 것이 더 호환성이 높다
+
+---
+
+### 문제 5: RDS 연결 실패 (`could not connect to server`)
 
 **증상**: 앱 시작 시 `OperationalError: could not connect to server`
 **원인**: EC2 보안 그룹이 RDS 보안 그룹에 허용되지 않음
@@ -289,7 +345,7 @@ bash scripts/deploy.sh
 
 ---
 
-### 문제 2: Docker 빌드 시 `psycopg2` 컴파일 오류
+### 문제 6: Docker 빌드 시 `psycopg2` 컴파일 오류
 
 **증상**: `Error: pg_config executable not found`
 **원인**: `psycopg2` 빌드에 PostgreSQL 개발 헤더 필요
@@ -298,7 +354,7 @@ bash scripts/deploy.sh
 
 ---
 
-### 문제 3: S3 업로드 실패 (`NoCredentialsError`)
+### 문제 7: S3 업로드 실패 (`NoCredentialsError`)
 
 **증상**: 파일 업로드 시 `botocore.exceptions.NoCredentialsError`
 **원인**: `.env.prod`의 AWS 자격증명이 누락되거나 잘못됨
@@ -307,7 +363,7 @@ bash scripts/deploy.sh
 
 ---
 
-### 문제 4: Alembic 마이그레이션 실패 (`relation already exists`)
+### 문제 8: Alembic 마이그레이션 실패 (`relation already exists`)
 
 **증상**: `alembic upgrade head` 시 테이블 중복 오류
 **원인**: 이미 마이그레이션이 적용된 DB에 재실행
@@ -315,7 +371,7 @@ bash scripts/deploy.sh
 
 ---
 
-### 문제 5: Docker 컨테이너가 `unhealthy` 상태
+### 문제 9: Docker 컨테이너가 `unhealthy` 상태
 
 **증상**: `docker compose ps`에서 앱 컨테이너가 `unhealthy`
 **원인**: 앱이 시작됐지만 `/health` 엔드포인트가 응답하지 않음
@@ -429,13 +485,13 @@ docker compose -f docker-compose.prod.yml run --rm app \
 - [x] `docker-compose.prod.yml` - EC2 배포용 (app만)
 - [x] `.dockerignore` - 이미지 최적화
 - [x] `scripts/deploy.sh` - EC2 자동 배포 스크립트
-- [ ] AWS EC2 생성 및 Docker 설치 완료
-- [ ] AWS RDS PostgreSQL 생성 완료
-- [ ] AWS S3 버킷 생성 완료
-- [ ] AWS IAM 사용자 및 최소 권한 정책 설정 완료
-- [ ] 보안 그룹 설정 완료 (EC2 → RDS 포트 허용)
-- [ ] EC2에 `.env.prod` 파일 생성 완료
-- [ ] `bash scripts/deploy.sh` 실행 후 `/health` 정상 응답 확인
+- [x] AWS IAM 사용자 및 최소 권한 정책 설정 완료 (`web-daw-app`)
+- [x] AWS S3 버킷 생성 완료 (`web-daw-audio-files-sdg`)
+- [x] AWS RDS PostgreSQL 생성 완료 (`web-daw-db`, ap-northeast-2)
+- [x] AWS EC2 생성 및 Docker + Docker Compose 설치 완료 (`web-daw-server`, t3.micro)
+- [x] 보안 그룹 설정 완료 (EC2 → RDS 포트 5432 허용)
+- [x] EC2에 `.env.prod` 파일 생성 완료
+- [x] `bash scripts/deploy.sh` 실행 후 `/health` 정상 응답 확인 (`environment: production`)
 
 ---
 

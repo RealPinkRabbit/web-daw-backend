@@ -29,8 +29,10 @@ if [ ! -f ".env.prod" ]; then
 fi
 
 # 3. Docker 이미지 빌드
+# docker compose build 대신 docker build 직접 사용
+# (Amazon Linux 2023의 buildx 버전 호환성 문제 회피)
 echo "[2/5] Docker 이미지 빌드 중..."
-docker compose -f "$COMPOSE_FILE" build --no-cache
+docker build -f docker/Dockerfile -t web-daw-backend:latest .
 
 # 4. DB 마이그레이션 실행 (기존 컨테이너 환경변수 사용)
 echo "[3/5] Alembic DB 마이그레이션 실행..."

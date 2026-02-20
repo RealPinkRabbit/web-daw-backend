@@ -239,7 +239,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 - [x] Phase 1: DB 기반 구축 (SQLAlchemy 모델, Alembic 마이그레이션) → [docs/phase-1.md](docs/phase-1.md)
 - [x] Phase 2: 사용자 인증 (JWT, register, login, get_current_user) → [docs/phase-2.md](docs/phase-2.md)
 - [x] Phase 3: S3 오디오 업로드 (boto3, Pre-signed URL) → [docs/phase-3.md](docs/phase-3.md)
-- [ ] Phase 4: 악기 API (CRUD, 샘플 매핑, 공유)
+- [x] Phase 4: 악기 API (CRUD, 샘플 매핑, 공유) → [docs/phase-4.md](docs/phase-4.md)
 - [ ] Phase 5: Docker + AWS 배포 (EC2, RDS, 보안 그룹)
 - [ ] Phase 6: GitHub Actions CI/CD
 - [ ] Phase 7: 마무리 (페이지네이션, 검증, 로깅, README)

@@ -1,11 +1,11 @@
 name: CI - 테스트 자동화
 
-# PR이 생성되거나 main 브랜치에 푸시할 때 실행
+# PR이 생성되거나 master 브랜치에 푸시할 때 실행
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   test:

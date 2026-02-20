@@ -74,8 +74,10 @@ class TestJWT:
         """변조된 토큰 디코딩 시 JWTError가 발생해야 한다."""
         data = {"sub": "user-uuid-123"}
         token = create_access_token(data)
-        # 토큰 마지막 문자를 변경하여 변조
-        tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+        # 페이로드(두 번째 세그먼트)를 변조 → 서명과 불일치 → JWTError 발생
+        header, payload, signature = token.split(".")
+        tampered_payload = payload[:-1] + ("A" if payload[-1] != "A" else "B")
+        tampered = f"{header}.{tampered_payload}.{signature}"
 
         with pytest.raises(JWTError):
             decode_token(tampered)
